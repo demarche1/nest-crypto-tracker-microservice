@@ -5,15 +5,13 @@ import { Producer } from 'kafkajs';
 export class CandlesService {
   constructor(
     @Inject('KAFKA_PRODUCER')
-    private kafkaProducer: Producer
+    private kafkaProducer: Producer,
   ) {}
 
   async producerBTC() {
     await this.kafkaProducer.send({
       topic: 'btc-candles',
-      messages: [
-        { value: '67498798', key: 'BTC' },
-      ],
+      messages: [{ value: '67498798', key: 'BTC' }],
     });
   }
 }

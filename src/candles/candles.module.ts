@@ -1,20 +1,21 @@
-import { Module } from '@nestjs/common';
+import { Module, Logger } from '@nestjs/common';
 import { ClientKafka, ClientsModule } from '@nestjs/microservices';
 import { CandlesController } from './candles.controller';
 import { CandlesService } from './candles.service';
-import { kafkaConsumerConfig } from '../kafka/kafka.consumer.config';
+import { kafkaConfig } from '../kafka/kafka.producer.config';
 
 @Module({
   imports: [
     ClientsModule.register([
       {
         name: 'KAFKA_SERVICE',
-        ...kafkaConsumerConfig,
-      }
-    ])
+        ...kafkaConfig,
+      },
+    ]),
   ],
   providers: [
     CandlesService,
+    Logger,
     {
       provide: 'KAFKA_PRODUCER',
       useFactory: (kafkaService: ClientKafka) => kafkaService.connect(),

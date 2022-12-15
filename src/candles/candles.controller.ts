@@ -1,9 +1,12 @@
-import { Controller, OnModuleInit } from '@nestjs/common';
+import { Controller, OnModuleInit, Logger } from '@nestjs/common';
 import { CandlesService } from './candles.service';
 
 @Controller()
-export class CandlesController {
-  constructor(private readonly candlesService: CandlesService) {}
+export class CandlesController implements OnModuleInit {
+  constructor(
+    private readonly candlesService: CandlesService,
+    private readonly logger: Logger,
+  ) {}
 
   async onModuleInit() {
     await this.onProduceBTC();
@@ -13,7 +16,7 @@ export class CandlesController {
     setInterval(async () => {
       await this.candlesService.producerBTC();
 
-      console.log('BTC produced');
+      this.logger.log('BTC produced');
     }, 5000);
   }
 }
