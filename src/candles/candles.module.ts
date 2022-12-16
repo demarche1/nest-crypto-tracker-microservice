@@ -1,26 +1,24 @@
 import { Module, Logger } from '@nestjs/common';
-import { ClientKafka, ClientsModule } from '@nestjs/microservices';
+import { ClientsModule } from '@nestjs/microservices';
 import { CandlesController } from './candles.controller';
 import { CandlesService } from './candles.service';
-import { kafkaConfig } from '../kafka/kafka.producer.config';
+import { KafkaService } from '../kafka/kafka.service';
+import { ApiModule } from 'src/api/api.module';
 
 @Module({
   imports: [
+    ApiModule,
     ClientsModule.register([
       {
         name: 'KAFKA_SERVICE',
-        ...kafkaConfig,
+        ...KafkaService.config,
       },
     ]),
   ],
   providers: [
     CandlesService,
     Logger,
-    {
-      provide: 'KAFKA_PRODUCER',
-      useFactory: (kafkaService: ClientKafka) => kafkaService.connect(),
-      inject: ['KAFKA_SERVICE'],
-    },
+    KafkaService.provider,
   ],
   controllers: [CandlesController],
 })

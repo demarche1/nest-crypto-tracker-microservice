@@ -1,5 +1,23 @@
-version: '3'
+version: '3.4'
+
 services:
+  app:
+    tty: true
+    image: retargeting-events-consumer
+    depends_on:
+      kafka:
+        condition: service_healthy
+    build:
+      context: ./
+    command: npm run start:dev
+    volumes:
+      - ./:/home/node/app/
+      - node_modules:/home/node/app/node_modules
+    ports:
+      - 3002:3002
+    links:
+      - kafka
+
   zookeeper:
     image: confluentinc/cp-zookeeper:latest
     environment:
@@ -39,3 +57,6 @@ services:
       KAFKA_CLUSTERS_0_ZOOKEEPER: zookeeper:2181
       KAFKA_CLUSTERS_0_NAME: local
       KAFKA_CLUSTERS_0_BOOTSTRAPSERVERS: kafka:9092
+
+volumes:
+  node_modules:
