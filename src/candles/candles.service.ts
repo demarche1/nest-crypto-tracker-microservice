@@ -1,69 +1,78 @@
-import { Injectable, Inject } from '@nestjs/common';
-import { Producer } from 'kafkajs';
+import { CandleColors } from './enums/CandleColors';
 
-@Injectable()
+type Candle = {
+  low: number;
+  high: number;
+  open: number;
+  close: number;
+  color: CandleColors;
+  finalDateTime: Date;
+  currency: Currency;
+};
+
+type Currency = 'BTC' | 'ETH' | undefined;
+
 export class CandlesService {
   constructor(
-    @Inject('KAFKA_PRODUCER')
-    private kafkaProducer: Producer,
+    private low = Infinity,
+    private high = -Infinity,
+    private open = 0,
+    private close = 0,
+    private color = CandleColors.UNDETERMINED,
+    private finalDateTime = undefined,
+    private values = [],
+    private currency: Currency = undefined,
   ) {}
 
-  async producerBTC() {
-    await this.kafkaProducer.send({
-      topic: 'btc-candles',
-      messages: [{ value: '67498798', key: 'BTC' }],
-    });
+  addCurrency(currency: Currency) {
+    this.currency = currency;
   }
 
-  produceCandles(currency: string) {
-    const Candle = {
-      LOW: Infinity,
-      HIGH: -Infinity,
-      OPEN: 0,
-      CLOSE: 0,
-      COLOR: undefined,
-      CURRENCY: currency,
-      FINALDATETIME: undefined,
-    };
-    const VALUES = [];
+  addValues(value: number) {
+    if (this.values.length === 0) this.open = value;
 
-    const addValues = (value: number) => {
-      if (!VALUES.length) Candle.OPEN = value;
+    if (value > this.high) this.high = value;
 
-      if (value > Candle.HIGH) Candle.HIGH = value;
+    if (value < this.low) this.low = value;
 
-      if (value < Candle.LOW) Candle.LOW = value;
-
-      VALUES.push(value);
-    };
-
-    const setCandleColor = () => {
-      if (Candle.OPEN > Candle.CLOSE) Candle.COLOR = 'RED';
-
-      if (Candle.OPEN < Candle.CLOSE) Candle.COLOR = 'GREEN';
-    };
-
-    const closeCandle = () => {
-      if (!VALUES.length) return;
-
-      Candle.CLOSE = VALUES.pop();
-
-      Candle.FINALDATETIME = new Date();
-    };
-
-    const getCandle = () => Candle;
-
-    return { addValues, setCandleColor, closeCandle, getCandle };
+    this.values.push(value);
   }
 
-  checkCandle(loopTimes: number, currency: string) {
-    while (true) {
-      const { addValues, closeCandle, getCandle, setCandleColor } =
-        this.produceCandles(currency);
-
-      for (let i = 0; i < loopTimes; i++) {
-        addValues(Math.random());
-      }
+  setCandleColor() {
+    if (this.open > this.close) {
+      this.color = CandleColors.RED;
+      return;
     }
+
+    if (this.open < this.close) {
+      this.color = CandleColors.GREEN;
+      return;
+    }
+  }
+
+  closeCandle() {
+    if (!this.values.length) return;
+
+    this.close = this.values[this.values.length - 1];
+    this.finalDateTime = new Date();
+
+    this.setCandleColor();
+  }
+
+  toSimpleObject(): Candle {
+    Reflect.deleteProperty(this, 'values');
+
+    return this as unknown as Candle;
+  }
+
+  reset() {
+    this.low = Infinity;
+    this.high = -Infinity;
+    this.open = 0;
+    this.close = 0;
+    this.color = CandleColors.UNDETERMINED;
+    this.finalDateTime = undefined;
+    this.values = [];
+    this.currency = undefined;
   }
 }
