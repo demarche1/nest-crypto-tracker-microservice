@@ -1,0 +1,32 @@
+networks:
+  app-tier:
+    driver: bridge
+
+services:
+  consumer:
+    image: crypto-tracker-events-consumer
+    depends_on:
+      - mongodb_candles
+    build:
+      context: ./
+    command: npm run start:dev
+    volumes:
+      - ./:/home/node/app/
+      - node_modules:/home/node/app/node_modules
+    ports:
+      - 5555:5555
+    links:
+      - mongodb_candles
+    networks:
+      - app-tier
+  
+  mongodb_candles:
+    image: 'mongo:latest'
+    ports:
+      - 27017:27017
+    volumes:
+      - mongodb_data_container:/data/db
+
+volumes:
+  mongodb_data_container:
+  node_modules:

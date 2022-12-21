@@ -1,9 +1,13 @@
 version: '3.4'
 
+networks:
+  app-tier:
+    driver: bridge
+
 services:
   app:
     tty: true
-    image: retargeting-events-consumer
+    image: crypto-tracker-events-producer
     depends_on:
       kafka:
         condition: service_healthy
@@ -17,6 +21,8 @@ services:
       - 3000:3000
     links:
       - kafka
+    networks:
+      - app-tier
 
   zookeeper:
     image: confluentinc/cp-zookeeper:latest
@@ -25,9 +31,13 @@ services:
       ZOOKEEPER_TICK_TIME: 2000
     ports:
       - 22181:2181
+    networks:
+      - app-tier
 
   kafka:
     image: confluentinc/cp-kafka:latest
+    networks:
+      - app-tier
     depends_on:
       - zookeeper
     ports:
