@@ -1,16 +1,13 @@
-
 FROM node:18.11.0-alpine
 
 RUN apk add --no-cache bash
 
-WORKDIR /home/node/app/
+WORKDIR /home/node/app/producer
 
-RUN  mkdir -p /home/node/app/
+RUN  mkdir -p /home/node/app/producer
 
-COPY package.json ./
+COPY package.json .
 
 RUN npm install 
 
 COPY . .
-
-RUN npm run build

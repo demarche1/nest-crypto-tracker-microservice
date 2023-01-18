@@ -1,28 +1,34 @@
 version: '3.4'
 
-networks:
-  app-tier:
-    driver: bridge
-
 services:
-  app:
+  app-consumer:
     tty: true
-    image: crypto-tracker-events-producer
+    build: ./consumer
+    depends_on:
+      - kafka
+      - mongodb_candles
+    volumes:
+      # - /home/node/app/consumer
+      - ./consumer/:/home/node/app/consumer/
+    ports:
+      - 5000:5000
+    links:
+      - kafka
+      - mongodb_candles
+
+  app-producer:
+    tty: true
+    build: ./producer
     depends_on:
       kafka:
         condition: service_healthy
-    build:
-      context: ./
-    command: npm run start:dev
     volumes:
-      - ./:/home/node/app/
-      - node_modules:/home/node/app/node_modules
+      # - /home/node/app/producer
+      - ./producer:/home/node/app/producer/
     ports:
       - 3000:3000
     links:
       - kafka
-    networks:
-      - app-tier
 
   zookeeper:
     image: confluentinc/cp-zookeeper:latest
@@ -31,13 +37,9 @@ services:
       ZOOKEEPER_TICK_TIME: 2000
     ports:
       - 22181:2181
-    networks:
-      - app-tier
 
   kafka:
     image: confluentinc/cp-kafka:latest
-    networks:
-      - app-tier
     depends_on:
       - zookeeper
     ports:
@@ -68,5 +70,12 @@ services:
       KAFKA_CLUSTERS_0_NAME: local
       KAFKA_CLUSTERS_0_BOOTSTRAPSERVERS: kafka:9092
 
+  mongodb_candles:
+    image: 'mongo:latest'
+    ports:
+      - 27017:27017
+    volumes:
+      - mongodb_data_container:/data/da
+
 volumes:
-  node_modules:
+  mongodb_data_container:

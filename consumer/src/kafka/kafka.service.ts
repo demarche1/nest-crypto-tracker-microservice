@@ -6,6 +6,9 @@ export class KafkaService {
     return {
       transport: Transport.KAFKA,
       options: {
+        consumer: {
+          groupId: 'nestjs-group-server',
+        },
         client: {
           brokers: ['kafka:9092'],
         },

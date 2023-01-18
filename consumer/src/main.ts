@@ -8,6 +8,6 @@ async function bootstrap() {
   app.connectMicroservice(KafkaService.config);
   await app.startAllMicroservices();
 
-  await app.listen(5555);
+  await app.listen(5000);
 }
 bootstrap();
